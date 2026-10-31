@@ -80,7 +80,7 @@ jobs:
               <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
               <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
               <application
-                  android:label="Plans"
+                  android:label="Takero"
                   android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
                   <activity
                       android:name=".MainActivity"
@@ -114,6 +114,23 @@ jobs:
           public class MainActivity extends Activity {
               private WebView web;
 
+              private static final String JS =
+                  "(function(){"
+                  + "if(window.__tk)return;window.__tk=1;"
+                  + "var re=/apple.{0,3}(plans|maps)|(plans|maps).{0,3}beta/i;"
+                  + "function fix(){"
+                  + "document.querySelectorAll('img,svg').forEach(function(e){"
+                  + "var p=e.parentElement;"
+                  + "var t=(e.getAttribute('aria-label')||'')+' '+(e.getAttribute('alt')||'')+' '+(e.getAttribute('title')||'')+' '+(p?(p.getAttribute('aria-label')||''):'');"
+                  + "if(re.test(t)&&!e.dataset.tk){"
+                  + "var s=document.createElement('span');"
+                  + "s.textContent='Takero';"
+                  + "s.style.cssText='font:700 22px sans-serif;color:#fff';"
+                  + "e.dataset.tk='1';e.style.display='none';"
+                  + "e.parentNode.insertBefore(s,e);}});}"
+                  + "setInterval(fix,1000);fix();"
+                  + "})();";
+
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
@@ -144,7 +161,13 @@ jobs:
                       s.setForceDark(WebSettings.FORCE_DARK_ON);
                   }
 
-                  web.setWebViewClient(new WebViewClient());
+                  web.setWebViewClient(new WebViewClient() {
+                      @Override
+                      public void onPageFinished(WebView view, String url) {
+                          super.onPageFinished(view, url);
+                          view.evaluateJavascript(JS, null);
+                      }
+                  });
                   web.setWebChromeClient(new WebChromeClient() {
                       @Override
                       public void onGeolocationPermissionsShowPrompt(String origin,
