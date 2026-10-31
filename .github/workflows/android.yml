@@ -117,17 +117,29 @@ jobs:
               private static final String JS =
                   "(function(){"
                   + "if(window.__tk)return;window.__tk=1;"
-                  + "var re=/apple.{0,3}(plans|maps)|(plans|maps).{0,3}beta/i;"
                   + "function fix(){"
-                  + "document.querySelectorAll('img,svg').forEach(function(e){"
-                  + "var p=e.parentElement;"
-                  + "var t=(e.getAttribute('aria-label')||'')+' '+(e.getAttribute('alt')||'')+' '+(e.getAttribute('title')||'')+' '+(p?(p.getAttribute('aria-label')||''):'');"
-                  + "if(re.test(t)&&!e.dataset.tk){"
+                  + "var all=document.querySelectorAll('*');"
+                  + "for(var i=0;i<all.length;i++){"
+                  + "var b=all[i];"
+                  + "if(b.children.length||b.textContent.trim().toUpperCase()!=='BETA')continue;"
+                  + "var el=b,lg=null;"
+                  + "for(var k=0;k<4&&el&&!lg;k++){lg=el.previousElementSibling;if(!lg)el=el.parentElement;}"
+                  + "if(!lg||lg.dataset.tk)continue;"
+                  + "var r=lg.getBoundingClientRect();"
+                  + "if(r.width<5)continue;"
+                  + "lg.dataset.tk='1';"
+                  + "if(/plans/i.test(lg.textContent)){"
+                  + "var w=document.createTreeWalker(lg,NodeFilter.SHOW_TEXT,null);var n;"
+                  + "while(n=w.nextNode()){n.nodeValue=n.nodeValue.replace(/plans/i,'Takero');}"
+                  + "continue;}"
                   + "var s=document.createElement('span');"
                   + "s.textContent='Takero';"
-                  + "s.style.cssText='font:700 22px sans-serif;color:#fff';"
-                  + "e.dataset.tk='1';e.style.display='none';"
-                  + "e.parentNode.insertBefore(s,e);}});}"
+                  + "s.style.cssText='font:400 22px -apple-system,sans-serif;color:#fff;white-space:nowrap;position:relative;';"
+                  + "if(r.width<50){lg.style.display='none';lg.parentNode.insertBefore(s,lg);}"
+                  + "else{lg.style.clipPath='inset(0 78% 0 0)';"
+                  + "s.style.marginLeft='-'+Math.round(r.width*0.78)+'px';"
+                  + "lg.parentNode.insertBefore(s,lg.nextSibling);}"
+                  + "}}"
                   + "setInterval(fix,1000);fix();"
                   + "})();";
 
@@ -143,6 +155,8 @@ jobs:
                               Manifest.permission.ACCESS_FINE_LOCATION,
                               Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
                   }
+
+                  WebView.setWebContentsDebuggingEnabled(true);
 
                   web = new WebView(this);
                   web.setBackgroundColor(Color.BLACK);
